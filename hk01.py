@@ -12,15 +12,17 @@ def remove_tags(text):
 def writetxt(url):
     html = requests.get(url).text
     soup = BeautifulSoup(html,'html.parser')
+    #date and time
+    for x in soup('meta',attrs = {'property':'article:published_time'}):
+            time = x.get('content').split('T')[0]
     #f = open('{}.txt'.format(soup('meta',attrs = {'name':'title'})[0].get('content',None),'w+'))
-    filename = soup('meta',attrs = {'name':'title'})[0].get('content',None)
+    filename = soup('meta',attrs = {'name':'title'})[0].get('content',None) + '--{}'.format(time)
     f = open('{}.txt'.format(filename),'w+')
     #title
     for x in soup('meta',attrs = {'name':'title'}):
         f.write(x.get('content',None) + '\n')
-    #date and time
-    for x in soup('meta',attrs = {'property="article:published_time"'}):
-        f.write(x.get('content',None) + '\n')
+    #write date and time
+    f.write('{}\n'.format(time))
     #paragraphs
     for x in soup('p'):
         if remove_tags(str(x).rstrip()) != '登入 ' and remove_tags(str(x).rstrip()) != '登入 / 註冊':
