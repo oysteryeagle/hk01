@@ -18,10 +18,13 @@ def writetxt(url):
     #title
     for x in soup('meta',attrs = {'name':'title'}):
         f.write(x.get('content',None) + '\n')
+    #date and time
+    for x in soup('meta',attrs = {'property="article:published_time"'}):
+        f.write(x.get('content',None) + '\n')
     #paragraphs
     for x in soup('p'):
         if remove_tags(str(x).rstrip()) != '登入 ' and remove_tags(str(x).rstrip()) != '登入 / 註冊':
-            f.write(remove_tags(str(x)) + '\n\n')
+            f.write(4*' ' + remove_tags(str(x)) + '\n\n')
     f.close()
     print('{} created.'.format(filename))
 
@@ -70,5 +73,5 @@ while True:
         writetxt(url)
     (urls,nextOffsetValue) = parseJSON(nextOffsetValue)
     count += 1
-    if count > 5:
+    if count > 1:
         break
