@@ -15,19 +15,19 @@ def writetxt(url):
     #f = open('{}.txt'.format(soup('meta',attrs = {'name':'title'})[0].get('content',None),'w+'))
     filename = soup('meta',attrs = {'name':'title'})[0].get('content',None)
     f = open('{}.txt'.format(filename),'w+')
+    #title
     for x in soup('meta',attrs = {'name':'title'}):
         f.write(x.get('content',None) + '\n')
-    #for x in soup('meta',attrs = {'name':'description'}):
-    #    print(x.get('content',None))
-    for x in soup('p',text = True):
-        if len(remove_tags(str(x)).rstrip()) > 2:
+    #paragraphs
+    for x in soup('p'):
+        if remove_tags(str(x).rstrip()) != '登入 ' and remove_tags(str(x).rstrip()) != '登入 / 註冊':
             f.write(remove_tags(str(x)) + '\n\n')
     f.close()
     print('{} created.'.format(filename))
 
 #main page-----------------------------------------------------------------------------------------------------------------
 #make a dictionary to store all the urls on the main page.
-#urls = dict()
+urls1 = dict()
 
 #requests the html of the main page.
 html = requests.get('https://www.hk01.com/tag/8502').text
@@ -35,13 +35,13 @@ soup = BeautifulSoup(html,'html.parser')
 
 #store all the urls with '/01觀點/' into the 'urls' dictionary.
 #a dictionary is used because hk01.com has two urls on the main page for each article.
-#for x in soup('a'):
-#    if '/01觀點/' in x.get('href',None):
-#        urls[x.get('href',None)] = urls.get(x.get('href',None),1)
+for x in soup('a'):
+    if '/01觀點/' in x.get('href',None):
+        urls1[x.get('href',None)] = urls1.get(x.get('href',None),1)
 
 #Write articles into files.
-#for url in urls:
-#    writetxt('https://www.hk01.com{}'.format(url))
+for url in urls1:
+    writetxt('https://www.hk01.com{}'.format(url))
 
 #infiniteScroll------------------------------------------------------------------------------------------------------------
 #the following function gets the url to more articles in the infinite scroll.
@@ -70,5 +70,5 @@ while True:
         writetxt(url)
     (urls,nextOffsetValue) = parseJSON(nextOffsetValue)
     count += 1
-    if count > 2:
+    if count > 5:
         break
