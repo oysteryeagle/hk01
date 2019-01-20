@@ -3,10 +3,34 @@ import requests
 import time
 from bs4 import BeautifulSoup
 
-#the following function will be used to remove html tags. This is only used when the wanted text is enclosed by two tags.
-TAG_RE = re.compile(r'<[^>]+>')
-def remove_tags(text):
-    return TAG_RE.sub('', text)
+#main page-----------------------------------------------------------------------------------------------------------------
+def main():
+    #make a dictionary to store all the urls on the main page.
+    urls1 = dict()
+
+    #requests the html of the main page.
+    html = requests.get('https://www.hk01.com/tag/8502').text
+    soup = BeautifulSoup(html,'html.parser')
+
+    #store all the urls with '/01觀點/' into the 'urls' dictionary.
+    #a dictionary is used because hk01.com has two urls on the main page for each article.
+    for x in soup('a'):
+        if '/01觀點/' in x.get('href',None):
+            urls1[x.get('href',None)] = urls1.get(x.get('href',None),1)
+
+    #Write articles into files.
+    for url in urls1:
+        writetxt('https://www.hk01.com{}'.format(url))
+
+    #get the offset value from the main page.
+    firstOffsetValue = firstOffset(soup)
+    (urls,nextOffsetValue) = parseJSON(firstOffsetValue)
+
+    #use the old offset value to find the new offset value and urls of articles. Repeats until no more offset value is found.
+    while True:
+        for url in urls:
+            writetxt(url)
+        (urls,nextOffsetValue) = parseJSON(nextOffsetValue)
 
 #writeArticle-----------------------------------------------------------------------------------------------------------------
 def writetxt(url):
@@ -29,24 +53,9 @@ def writetxt(url):
             f.write(4*' ' + remove_tags(str(x)) + '\n\n')
     f.close()
     print('{} created.'.format(filename))
-
-#main page-----------------------------------------------------------------------------------------------------------------
-#make a dictionary to store all the urls on the main page.
-urls1 = dict()
-
-#requests the html of the main page.
-html = requests.get('https://www.hk01.com/tag/8502').text
-soup = BeautifulSoup(html,'html.parser')
-
-#store all the urls with '/01觀點/' into the 'urls' dictionary.
-#a dictionary is used because hk01.com has two urls on the main page for each article.
-for x in soup('a'):
-    if '/01觀點/' in x.get('href',None):
-        urls1[x.get('href',None)] = urls1.get(x.get('href',None),1)
-
-#Write articles into files.
-for url in urls1:
-    writetxt('https://www.hk01.com{}'.format(url))
+    nextstep = input('''Press 'Enter' to continue, type 'quit' to exit: ''')
+    if nextstep == 'quit':
+        quit()
 
 #infiniteScroll------------------------------------------------------------------------------------------------------------
 #the following function gets the url to more articles in the infinite scroll.
@@ -63,17 +72,18 @@ def parseJSON(offsetValue):
     urls = list()
     for item in JSON['items']:
         urls.append(item['data']['canonicalUrl'])
-    nextOffsetValue = JSON['nextOffset']
+    try:nextOffsetValue = JSON['nextOffset']
+    except:
+        print('No more article found.')
+        input('Press Enter to quit.')
+        quit()
     return (urls,nextOffsetValue)
 
-firstOffsetValue = firstOffset(soup)
-(urls,nextOffsetValue) = parseJSON(firstOffsetValue)
+#the following function will be used to remove html tags. This is only used when the wanted text is enclosed by two tags.
+TAG_RE = re.compile(r'<[^>]+>')
+def remove_tags(text):
+    return TAG_RE.sub('', text)
 
-count = 0
-while True:
-    for url in urls:
-        writetxt(url)
-    (urls,nextOffsetValue) = parseJSON(nextOffsetValue)
-    count += 1
-    if count > 1:
-        break
+#__main__
+if __name__ == '__main__':
+    main()
