@@ -7,9 +7,18 @@ from bs4 import BeautifulSoup
 def main():
     #make a dictionary to store all the urls on the main page.
     urls1 = dict()
-
+    print('hk01 news crawler.\n香港01新聞下載器')
+    print('目錄:\n1. 01周報社論')
+    while True:
+        directory = input()
+        if directory == '1':
+            #directory = 'https://www.hk01.com/tag/8502'
+            print('加載中...')
+            break
+        else:
+            continue
     #requests the html of the main page.
-    html = requests.get('https://www.hk01.com/tag/8502').text
+    html = requests.get('https://www.hk01.com/tag/8502').text #html = requests.get(directory).text
     soup = BeautifulSoup(html,'html.parser')
 
     #store all the urls with '/01觀點/' into the 'urls' dictionary.
