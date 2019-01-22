@@ -1,25 +1,66 @@
 import ast
 import time
+import subprocess
 
-
+itemrange = list()
+subprocess.run('clear')
+print('Number of topics per page: ')
+while 1:
+    num = input()
+    try:
+        num = int(num)
+        for x in range(1,num+1):
+            itemrange.append(str(x))
+        break
+    except:
+        print('Input error')
+        continue
 start = 0
-end = 10
+end = len(itemrange)
+itemsperpage = len(itemrange)
 page = 1
-while True:
-    with open('dictionary.txt') as f:
-        dictionary = ast.literal_eval(f.read())
-    print(20*'-')
-    for index,topic in enumerate(list(dictionary)[start:end],1):
-        print(index,topic)
-    print(20*'-'+'page {}'.format(page))
+
+with open('dictionary.txt') as f:
+    dictionary = ast.literal_eval(f.read())
+#display-----------------------------------------------------------------------------
+subprocess.run('clear')
+print(20*'-')
+for index,topic in enumerate(list(dictionary)[start:end],1):
+    print(index,topic)
+print(20*'-'+'page {}'.format(page))
+#------------------------------------------------------------------------------------
+while 1:
     nextstep = input('f/b: ')
     if nextstep == 'quit':
         quit()
+    elif nextstep in itemrange:
+        tag = list(dictionary)[start+int(nextstep)-1]
+        print('{} (y/n)?'.format(tag))
+        yesno = input('input: ')
+        if yesno == 'n':
+            continue
+        if yesno == 'y':
+            break
     elif nextstep == 'f':
-        start += 10
-        end += 10
+        start += itemsperpage
+        end += itemsperpage
         page += 1
+        #display-----------------------------------------------------------------------------
+        subprocess.run('clear')
+        print(20*'-')
+        for index,topic in enumerate(list(dictionary)[start:end],1):
+            print(index,topic)
+        print(20*'-'+'page {}'.format(page))
+        #------------------------------------------------------------------------------------
     elif nextstep == 'b':
-        start -= 10
-        end -= 10
+        start -= itemsperpage
+        end -= itemsperpage
         page -= 1
+        #display-----------------------------------------------------------------------------
+        subprocess.run('clear')
+        print(20*'-')
+        for index,topic in enumerate(list(dictionary)[start:end],1):
+            print(index,topic)
+        print(20*'-'+'page {}'.format(page))
+        #------------------------------------------------------------------------------------
+print('retrieving {}'.format(tag))
