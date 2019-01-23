@@ -10,7 +10,7 @@ with open('tags.txt') as f:
         tags[index] = tags[index].replace('\n','')
         tag = tags[index].split(' ',1)
         if dictionary.get(tag[1],None) != None:
-            dictionary[tag[1]] = dictionary.get(tag[1],None) + ', {}'.format(tag[0])
+            dictionary[tag[1]] = dictionary.get(tag[1],None) + ',{}'.format(tag[0])
             continue
         dictionary[tag[1]] = tag[0]
         #print(tag[0])

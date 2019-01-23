@@ -1,5 +1,4 @@
 import ast
-import time
 import subprocess
 
 itemrange = list()
@@ -69,7 +68,8 @@ while 1:
             print(index,topic)
         print(20*'-'+'page {}'.format(page))
         #------------------------------------------------------------------------------------
-print('fetching {}...'.format(tag))
+print('retrieving {}...'.format(tag))
 with open('dictionary.txt') as f:
     dictionary = ast.literal_eval(f.read())
     print('tag: {}'.format(dictionary[tag]))
+#return 'tag: {}'.format(dictionary[tag])

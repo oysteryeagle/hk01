@@ -1,45 +1,98 @@
-import re
 import requests
-import time
 from bs4 import BeautifulSoup
+import re
+import ast
+import subprocess
 
-#main page-----------------------------------------------------------------------------------------------------------------
-def main():
-    #make a dictionary to store all the urls on the main page.
-    urls1 = dict()
-    print('hk01 news crawler.\n香港01新聞下載器')
-    print('目錄:\n1. 01周報社論')
-    while True:
-        directory = input()
-        if directory == '1':
-            #directory = 'https://www.hk01.com/tag/8502'
-            print('加載中...')
+#directory-----------------------------------------------------------------------------------------------------------------
+def directory():
+    itemrange = list()
+    subprocess.run('clear')
+    print('香港01新聞下載器')
+    #initial setup
+    print('Number of topics per page: ')
+    while 1:
+        num = input()
+        try:
+            num = int(num)
+            for x in range(1,num+1):
+                itemrange.append(str(x))
             break
-        else:
+        except:
+            print('Input error')
             continue
-    #requests the html of the main page.
-    html = requests.get('https://www.hk01.com/tag/8502').text #html = requests.get(directory).text
-    soup = BeautifulSoup(html,'html.parser')
+    start = 0
+    end = len(itemrange)
+    itemsperpage = len(itemrange)
+    page = 1
 
-    #store all the urls with '/01觀點/' into the 'urls' dictionary.
-    #a dictionary is used because hk01.com has two urls on the main page for each article.
-    for x in soup('a'):
-        if '/01觀點/' in x.get('href',None):
-            urls1[x.get('href',None)] = urls1.get(x.get('href',None),1)
+    with open('dictionary.txt') as f:
+        dictionary = ast.literal_eval(f.read())
+    #menu
+    #display-----------------------------------------------------------------------------
+    subprocess.run('clear')
+    print('香港01新聞下載器')
+    print(20*'-')
+    for index,topic in enumerate(list(dictionary)[start:end],1):
+        print(index,topic)
+    print(20*'-'+'page {}'.format(page))
+    #------------------------------------------------------------------------------------
+    while 1:
+        nextstep = input('f/b: ')
+        if nextstep == 'quit':
+            quit()
+        elif nextstep in itemrange:
+            tag = list(dictionary)[start+int(nextstep)-1]
+            print('{} (y/n)?'.format(tag))
+            yesno = input('input: ')
+            if yesno == 'n':
+                continue
+            if yesno == 'y':
+                break
+        elif nextstep == 'f': #next page (forward)
+            start += itemsperpage
+            end += itemsperpage
+            page += 1
+            #display-----------------------------------------------------------------------------
+            subprocess.run('clear')
+            print('香港01新聞下載器')
+            print(20*'-')
+            for index,topic in enumerate(list(dictionary)[start:end],1):
+                print(index,topic)
+            print(20*'-'+'page {}'.format(page))
+            #------------------------------------------------------------------------------------
+        elif nextstep == 'b': #previous page (back)
+            start -= itemsperpage
+            end -= itemsperpage
+            page -= 1
+            #display-----------------------------------------------------------------------------
+            subprocess.run('clear')
+            print('香港01新聞下載器')
+            print(20*'-')
+            for index,topic in enumerate(list(dictionary)[start:end],1):
+                print(index,topic)
+            print(20*'-'+'page {}'.format(page))
+            #------------------------------------------------------------------------------------
+    print('fetching {}...'.format(tag))
+    with open('dictionary.txt') as f:
+        dictionary = ast.literal_eval(f.read())
+        return '{}'.format(dictionary[tag])
 
-    #Write articles into files.
-    for url in urls1:
-        writetxt('https://www.hk01.com{}'.format(url))
-
-    #get the offset value from the main page.
-    firstOffsetValue = firstOffset(soup)
-    (urls,nextOffsetValue) = parseJSON(firstOffsetValue)
-
-    #use the old offset value to find the new offset value and urls of articles. Repeats until no more offset value is found.
-    while True:
-        for url in urls:
-            writetxt(url)
-        (urls,nextOffsetValue) = parseJSON(nextOffsetValue)
+#getHref-----------------------------------------------------------------------------------------------------------------
+def getHref(taginp):
+    pattern = re.compile(r'^/[0-9]*[\u4e00-\u9fff]+')
+    for tag in taginp.split(','): #some pages have more than one tag
+        urls = list()
+        html = requests.get('https://www.hk01.com/tag/{}'.format(tag)).text
+        soup = BeautifulSoup(html,'html.parser')
+        #print(re.findall(r'''"canonicalUrl":"(.+?)"''',html))
+        for tag in soup('a'):
+        #    print(tag.get('href'))
+            if tag.get('href',None) != None:
+                if re.match(pattern,tag.get('href')):
+                    if 'https://www.hk01.com/{}'.format(tag.get('href')) not in urls:
+                        urls.append('https://www.hk01.com/{}'.format(tag.get('href')))
+    return urls        #return urls, which is a list of urls found on the main page
 
 #writeArticle-----------------------------------------------------------------------------------------------------------------
 def writetxt(url):
@@ -66,32 +119,17 @@ def writetxt(url):
     if nextstep == 'quit':
         quit()
 
-#infiniteScroll------------------------------------------------------------------------------------------------------------
-#the following function gets the url to more articles in the infinite scroll.
-def firstOffset(soup):
-    for text in soup('script',text=True):
-        nextOffset = re.findall('''"nextOffset":([0-9]{2,})''',str(text))
-        for firstOffsetValue in nextOffset:
-            if firstOffsetValue != '[]':
-                return firstOffsetValue
-
-#this function is used for parsing the retrieved JSON from the infinite scroll.
-def parseJSON(offsetValue):
-    JSON = requests.get('https://web-data.api.hk01.com/v2/feed/tag/8502?offset={}&bucketId=00000'.format(offsetValue)).json()
-    urls = list()
-    for item in JSON['items']:
-        urls.append(item['data']['canonicalUrl'])
-    try:nextOffsetValue = JSON['nextOffset']
-    except:
-        print('No more article found.')
-        input('Press Enter to quit.')
-        quit()
-    return (urls,nextOffsetValue)
-
 #the following function will be used to remove html tags. This is only used when the wanted text is enclosed by two tags.
 TAG_RE = re.compile(r'<[^>]+>')
 def remove_tags(text):
     return TAG_RE.sub('', text)
+
+def main():
+    tag = directory()
+    urls = getHref(tag)
+    for url in urls:
+        print(url)
+        writetxt(url)
 
 #__main__
 if __name__ == '__main__':

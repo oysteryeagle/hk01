@@ -1,6 +1,5 @@
 import requests
 
-html = requests.get('https://www.hk01.com/01觀點/182819/01周報社論-發展高球場非仇商-社會整體利益為重').text
-f = open('html2.txt','w+')
-f.write(html)
-f.close()
+html = requests.get('https://www.hk01.com/社會新聞/286495/小巴駕駛執照持有人年紀老化-近四成年過60歲-創5年新高').text
+with open('html2.txt','w+') as f:
+    f.write(html)
