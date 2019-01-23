@@ -4,6 +4,8 @@ import subprocess
 
 itemrange = list()
 subprocess.run('clear')
+print('香港01新聞下載器')
+#initial setup
 print('Number of topics per page: ')
 while 1:
     num = input()
@@ -22,8 +24,10 @@ page = 1
 
 with open('dictionary.txt') as f:
     dictionary = ast.literal_eval(f.read())
+#menu
 #display-----------------------------------------------------------------------------
 subprocess.run('clear')
+print('香港01新聞下載器')
 print(20*'-')
 for index,topic in enumerate(list(dictionary)[start:end],1):
     print(index,topic)
@@ -41,26 +45,31 @@ while 1:
             continue
         if yesno == 'y':
             break
-    elif nextstep == 'f':
+    elif nextstep == 'f': #next page (forward)
         start += itemsperpage
         end += itemsperpage
         page += 1
         #display-----------------------------------------------------------------------------
         subprocess.run('clear')
+        print('香港01新聞下載器')
         print(20*'-')
         for index,topic in enumerate(list(dictionary)[start:end],1):
             print(index,topic)
         print(20*'-'+'page {}'.format(page))
         #------------------------------------------------------------------------------------
-    elif nextstep == 'b':
+    elif nextstep == 'b': #previous page (back)
         start -= itemsperpage
         end -= itemsperpage
         page -= 1
         #display-----------------------------------------------------------------------------
         subprocess.run('clear')
+        print('香港01新聞下載器')
         print(20*'-')
         for index,topic in enumerate(list(dictionary)[start:end],1):
             print(index,topic)
         print(20*'-'+'page {}'.format(page))
         #------------------------------------------------------------------------------------
-print('retrieving {}'.format(tag))
+print('fetching {}...'.format(tag))
+with open('dictionary.txt') as f:
+    dictionary = ast.literal_eval(f.read())
+    print('tag: {}'.format(dictionary[tag]))
