@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import re
 import ast
 import subprocess
-
+import time
 #directory-----------------------------------------------------------------------------------------------------------------
 def directory():
     itemrange = list()
@@ -83,18 +83,24 @@ def search():
     matchlist = list()
     matchdict = dict()
     itemrange = list()
+    print('香港01新聞下載器')
     with open('dictionary.txt','r') as f:
         dictionary = ast.literal_eval(f.read())
-        find = input('find: ')
-        for item in dictionary:
-            if find in item:
-                matchlist.append(item)
+        while 1:
+            find = input('search: ')
+            if find == 'quit':quit()
+            for item in dictionary:
+                if find in item:
+                    matchlist.append(item)
+            if len(matchlist)>0:break
+            else: print('{} not found'.format(find))
     for index,item in enumerate(matchlist):
         print(index+1,item)
         itemrange.append(str(index+1)) #user input is string so range must also be string
         matchdict[str(index+1)] = item
     while 1:
-        choice = input()
+        choice = input('item number: ')
+        if choice == 'quit': quit()
         if choice in itemrange:
             yesno = input('{}? (y/n/quit)'.format(matchdict[choice]))
             if yesno == 'quit': quit()
@@ -168,6 +174,8 @@ def remove_tags(text):
     return TAG_RE.sub('', text)
 
 def main():
+    subprocess.run('clear')
+    print('香港01新聞下載器')
     while 1:
         mode = input('mode (directory/search): ')
         if mode == 'directory':
@@ -192,6 +200,11 @@ def main():
             elif writeyesno == 'quit':
                 quit()
     #get the offset value from the main page.
+    print('''
+--------------------------------
+    retrieving more items...
+--------------------------------''')
+    time.sleep(0.5)
     firstOffsetValue = firstOffset(soup)
     (urls,nextOffsetValue) = parseJSON(tag,firstOffsetValue)
     #use the old offset value to find the new offset value and urls of articles. Repeats until no more offset value is found.
@@ -207,8 +220,13 @@ def main():
                     break
                 elif writeyesno == 'quit':
                     quit()
+        print('''
+--------------------------------
+    retrieving more items...
+--------------------------------''')
+        time.sleep(0.5)
         (urls,nextOffsetValue) = parseJSON(tag,nextOffsetValue)
-
+        subprocess.run('clear')
 #__main__
 if __name__ == '__main__':
     main()
