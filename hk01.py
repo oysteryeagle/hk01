@@ -4,6 +4,7 @@ import re
 import ast
 import subprocess
 import time
+import os
 #directory-----------------------------------------------------------------------------------------------------------------
 def directory():
     itemrange = list()
@@ -49,7 +50,7 @@ def directory():
             if yesno == 'y':
                 break
         elif nextstep == 'f': #next page (forward)
-            start += itemsperpage
+            start += itemsperpageww
             end += itemsperpage
             page += 1
             #display-----------------------------------------------------------------------------
@@ -75,13 +76,13 @@ def directory():
     print('fetching {}...'.format(tag))
     with open('dictionary.txt') as f:
         dictionary = ast.literal_eval(f.read())
-        return '{}'.format(dictionary[tag]) #returns the tag number corresponding to the tag name
+        return '{}'.format(dictionary[tag]),tag #returns the tag number corresponding to the tag name
 
 #search-----------------------------------------------------------------------------------------------------------------
 def search():
     subprocess.run('clear')
-    matchlist = list()
-    matchdict = dict()
+    matchlist = list() #list the match items
+    matchdict = dict() #link the entry number with the tag number
     itemrange = list()
     print('香港01新聞下載器')
     with open('dictionary.txt','r') as f:
@@ -106,8 +107,9 @@ def search():
             if yesno == 'quit': quit()
             if yesno == 'n': continue
             if yesno == 'y':
-                tag = dictionary[matchdict[choice]]
-                return tag
+                tagnum = dictionary[matchdict[choice]]
+                tag = matchlist[int(choice)-1]
+                return tagnum,tag
 
 #getHref-----------------------------------------------------------------------------------------------------------------
 def getHref(taginp):
@@ -146,8 +148,17 @@ def parseJSON(tag,offsetValue):
         quit()
     return (urls,nextOffsetValue)
 
+#makeDirs---------------------------------------------------------------------------------------------------------------------
+def makeDirs(tag):
+    pass
+    path_name = '{}/{}'.format(os.getcwd(),tag)
+    if not os.path.exists(path_name):
+        os.makedirs(path_name)
+        print(path_name,'created')
+    return path_name
 #writeArticle-----------------------------------------------------------------------------------------------------------------
-def writetxt(url):
+def writetxt(url,tag):
+    path_name = makeDirs(tag)
     html = requests.get(url).text
     soup = BeautifulSoup(html,'html.parser')
     #date and time
@@ -155,7 +166,7 @@ def writetxt(url):
             time = x.get('content').split('T')[0]
     #f = open('{}.txt'.format(soup('meta',attrs = {'name':'title'})[0].get('content',None),'w+'))
     filename = soup('meta',attrs = {'name':'title'})[0].get('content',None) + '--{}'.format(time)
-    f = open('{}.txt'.format(filename),'w+')
+    f = open('{}/{}.txt'.format(path_name,filename),'w+')
     #title
     for x in soup('meta',attrs = {'name':'title'}):
         f.write(x.get('content',None) + '\n')
@@ -166,7 +177,7 @@ def writetxt(url):
         if remove_tags(str(x).rstrip()) != '登入 ' and remove_tags(str(x).rstrip()) != '登入 / 註冊':
             f.write(4*' ' + remove_tags(str(x)) + '\n\n')
     f.close()
-    print('{} created.\n'.format(filename))
+    print('{} created {}.\n'.format(filename,path_name))
 
 #the following function will be used to remove html tags. This is only used when the wanted text is enclosed by two tags.
 TAG_RE = re.compile(r'<[^>]+>')
@@ -179,21 +190,21 @@ def main():
     while 1:
         mode = input('mode (directory/search): ')
         if mode == 'directory':
-            tag = directory()
+            tagnum,tag = directory()
             break
         if mode == 'search':
-            tag = search()
+            tagnum,tag = search()
             break
         if mode == 'quit':
             quit()
-    urls,soup = getHref(tag)
+    urls,soup = getHref(tagnum)
     subprocess.run('clear')
     for url in urls:
         print('{} (y/n/quit): '.format(url),end='')
         while 1:
             writeyesno = input()
             if writeyesno == 'y':
-                writetxt(url)
+                writetxt(url,tag)
                 break
             elif writeyesno == 'n':
                 break
@@ -214,7 +225,7 @@ def main():
             while 1:
                 writeyesno = input()
                 if writeyesno == 'y':
-                    writetxt(url)
+                    writetxt(url,tag)
                     break
                 elif writeyesno == 'n':
                     break
